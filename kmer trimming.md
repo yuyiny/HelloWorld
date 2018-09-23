@@ -3,7 +3,7 @@
 运行[官网](https://khmer.readthedocs.io/en/latest/user/examples.html)上的一个栗子。
 
 
-### 准备工作
+## 准备工作
 
 在根目录或者自己用的工作目录下建一个kmer文件夹：
 ```
@@ -20,6 +20,20 @@ wget https://github.com/dib-lab/khmer/raw/stable/data/stamps-reads.fa.gz
 
 这个数据集的大小大约是3M，包含一堆100bp的序列，错误率大约是1%。
 
+## 工作流程
+
+建议查看[官方说明](https://khmer.readthedocs.io/en/latest/user/guide.html)
+
+### 宏基因组
+
+* 运行```load-into-counting```  
+* 运行```normalize-by-median.py```，设置cutoff为20  
+* 运行```filter-below-abund.py```，设置cutoff为100
+* 使用```load-graph.py```进行partition
+* 正常装配，可以用```extract-paired-reads.py```提取成对序列
+ 
+
+## 使用方法示例
 
 ### 计数
 
@@ -112,7 +126,7 @@ git clone https://github.com/MG-RAST/kmerspectrumanalyzer.git
                         30: Renyi entropy (transformation, function of lambda)
 ```
 
-* trouble shooting
+#### trouble shooting
 
 执行上述命令时可能会遇到以下问题：
 ```
@@ -128,7 +142,10 @@ ImportError: No module named 'ksatools'
 sudo python setup.py install
 ```
 
-### 
+
+
+
+
 
 
 
@@ -138,6 +155,7 @@ do-partition.py -k 32 -x 1e8 -s 1e4 -T 8 stamps-part stamps-reads.fa.gz
 ```
 
 这个会花一点时间。
+关于partition可以看[一篇文章](http://www.pnas.org/content/early/2012/07/25/1121464109)
 
 
 
@@ -171,12 +189,4 @@ abundance-dist.py stamps-dn3.ct stamps-reads.fa.gz.keep.abundfilt.keep \
 trim-low-abund
 ```
 
-官方文档的说明
-
-Apply single-pass digital normalization. Run normalize-by-median.py with --cutoff=20 (we’ve also found --cutoff=10 works fine).
-Run sandbox/filter-below-abund.py with --cutoff=50 (if you ran normalize-by-median.py with --cutoff=10) or wiht --cutoff=100 if you ran normalize-by-median.py with --cutoff=20)
-Partition reads with load-graph.py, etc. etc.
-Assemble groups as normal, extracting paired-end reads and lumping remaining orphan reads into singletons using extract-paired-reads.py.
-(We actually use Velvet at this point, but there should be no harm in using a metagenome assembler such as MetaVelvet or MetaIDBA or SOAPdenovo.)
-
-Read more about this in the partitioning paper. We have some upcoming papers on partitioning and metagenome assembly, too; we’ll link those in when we can.
+.
