@@ -48,7 +48,7 @@ http://(ip-xxx-xx-xx-x or 127.0.0.1):8888/
 Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
 ```
 
-此时打开浏览器，在地址栏输入自己的公有(或公有DNA):8888，回车。公有ip在EC2的控制台中查看，就是远程连接时的ip地址。  
+此时打开浏览器，在地址栏输入自己的公有ip:8888，回车。公有ip在EC2的控制台中查看，就是远程连接时的ip地址。  
 这时候会出现不安全提醒，忽略，出现密码框，输入前面设置的密码就可以了。 
 
 退出的时候敲ctrl+c，提示是否关闭敲y(yes)。
