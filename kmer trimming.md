@@ -22,14 +22,16 @@ wget https://github.com/dib-lab/khmer/raw/stable/data/stamps-reads.fa.gz
 
 ## 工作流程
 
-建议查看[官方说明](https://khmer.readthedocs.io/en/latest/user/guide.html)
+建议查看[官方说明](https://khmer.readthedocs.io/en/latest/user/guide.html)。
+
 
 ### 宏基因组
 
-* 运行```load-into-counting```  
-* 运行```normalize-by-median.py```，设置cutoff为20  
-* 运行```filter-below-abund.py```，设置cutoff为100
-* 使用```load-graph.py```进行partition
+* 计数，运行```load-into-counting``` 和 ```abundance-dist.py```
+	* 可选支线任务：绘制kmer统计图
+* 标准化，运行```normalize-by-median.py```，设置cutoff为20  
+* 过滤低丰度kmer，运行```filter-below-abund.py```，设置cutoff为100
+* 分区组，使用```load-graph.py```进行partition
 * 正常装配，可以用```extract-paired-reads.py```提取成对序列
  
 
@@ -52,6 +54,11 @@ usage: load-into-counting.py [--version] [--info] [-h] [-k KSIZE]
 ```
 我们输入了stamps-reads.fa.gz文件，设置-x(max tablesize)为10^8，-k(kmer)大小为20bp，输出coutgraph(ct)文件。  
 简单地说，数了一下每个kmer出现了多少次。
+
+一个说明：khmer2.0以后的版本会根据给定的-M自动计算-x。然而这就转到了-M的话题。  
+-M 参数设置最大允许使用的内存。简单的说，建议设置M为你实际使用的服务器的最大可用内存(或略微小一点点)，不用设置x。  
+khmer对kmer进行计数和其他一些处理用的数据结构比较特殊，是概率性的并且使用固定的内存容量("probabilistic and constant memory")。前一个特征决定了，设置的内存过小时，犯错的可能性很大，所以在条件允许范围内尽量把M设大一点。  
+关于内存使用问题的[官方说法](https://khmer.readthedocs.io/en/latest/user/choosing-table-sizes.html)。
 
 
 ### 统计
@@ -142,19 +149,17 @@ ImportError: No module named 'ksatools'
 sudo python setup.py install
 ```
 
+### 分区组(partitioning)
 
+尝试以下命令：
 
-
-
-
-
-
-然后
 ```
 do-partition.py -k 32 -x 1e8 -s 1e4 -T 8 stamps-part stamps-reads.fa.gz
 ```
 
-这个会花一点时间。
+这里用单个脚本执行了所有partitioning的步骤，会花一点时间。
+
+
 关于partition可以看[一篇文章](http://www.pnas.org/content/early/2012/07/25/1121464109)
 
 
