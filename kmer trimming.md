@@ -34,6 +34,18 @@ wget https://github.com/dib-lab/khmer/raw/stable/data/stamps-reads.fa.gz
 * 分区组，使用```load-graph.py```进行partition
 * 正常装配，可以用```extract-paired-reads.py```提取成对序列
  
+### 宏转录组
+
+* 标准化，运行```normalize-by-median.py```，参数cutoff=20
+* 提取余下的pair-end reads等等，```extract-paired-reads.py```
+* 使用基因组或宏基因组专业的组装软件进行序列组装
+
+### mRNA-seq
+
+* 标准化与宏基因组、宏转录组相同
+* 运行```extract-paired-reads.py```
+* 序列组装
+
 
 ## 使用方法示例
 
@@ -149,49 +161,62 @@ ImportError: No module named 'ksatools'
 sudo python setup.py install
 ```
 
+### 低丰度过滤
+
+```
+filter-abund.py -x 5e7 -k 20 -C 2 stamps-dn.ct stamps-reads.fa.gz.keep
+```
+如果不对输出文件名做说明的话，输出的名称是inputfilename.abundtrim。
+参数C是cutoff，缺省为2。
+
+
 ### 分区组(partitioning)
 
 尝试以下命令：
-
 ```
 do-partition.py -k 32 -x 1e8 -s 1e4 -T 8 stamps-part stamps-reads.fa.gz
 ```
 
 这里用单个脚本执行了所有partitioning的步骤，会花一点时间。
-
-
 关于partition可以看[一篇文章](http://www.pnas.org/content/early/2012/07/25/1121464109)
 
-
-
-待整理示例代码：
-
-  
-#do-partition.py -k 32 -x 1e8 -s 1e4 -T 8 stamps-part \
-	../../data/stamps-reads.fa.gz
-
-
-#../../sandbox/error-correct-pass2.py -C 10 stamps-dn.ct \
-	../../data/stamps-reads.fa.gz
-  
-load-into-counting.py -x 1e8 -k 20 stamps-corr.ct stamps-reads.fa.gz.corr
-abundance-dist.py stamps-corr.ct stamps-reads.fa.gz.corr stamps-corr.hist
-extract-partitions.py stamps-part stamps-reads.fa.gz.part
-extract-partitions.py -X 1 stamps-part stamps-reads.fa.gz.part
-load-into-counting.py -x 1e8 -k 20 stamps-part.g0.ct stamps-part.group0000.fa
-load-into-counting.py -x 1e8 -k 20 stamps-part.g1.ct stamps-part.group0001.fa
-abundance-dist.py stamps-part.g0.ct stamps-part.group0000.fa stamps-part.g0.hist
-abundance-dist.py stamps-part.g1.ct stamps-part.group0001.fa stamps-part.g1.hist
-
-filter-abund.py stamps-dn.ct stamps-reads.fa.gz.keep
-normalize-by-median.py -x 1e8 -k 20 -C 10 stamps-reads.fa.gz.keep.abundfilt \
-	--savetable stamps-dn3.ct
-
-abundance-dist.py stamps-dn3.ct stamps-reads.fa.gz.keep.abundfilt.keep \
-	stamps-dn3.hist
-  
-  
-trim-low-abund
+或者，如果更细致地逐步进行的话：
 ```
+load-graph.py -k 32 -N 4 -x 16e9 50m iowa-corn-50m.fa.gz
+```
+这个脚本的用途是，根据序列创建graph，并保存到 <ptname>，形式如```python scripts/load-graph.py <ptname> <data1>```
 
-.
+接下来根据图分区组：
+```
+partition-graph.py --threads 4 -s 1e5 50m
+```
+其中--threads参数设置线程数，根据服务器实际核数调整。  
+这个脚本后得到一系列分组文件，命名类似50m.subset.*.pmap
+
+然后把这些文件合并：
+```
+merge-partitions.py 50m
+```
+并把分组注释到原测序文件：
+```
+annotate-partitions.py 50m iowa-corn-50m.fa.gz
+```
+得到新的文件iowa-corn-50m.fa.gz.part。
+
+提取分组：
+```
+extract-partitions.py iowa-corn-50m iowa-corn-50m.fa.gz.part
+```
+然后就可以分别进行后续组装了。
+
+## 其他话题
+
+### 内存问题
+
+担心内存不够的一个可选处理方式：
+
+* 运行```unique-kmers.py```，得到估计的kmer数量
+* 在接下来要运行的脚本设置参数-U，khmer会根据U和M估计内存使用，如果内存不够，会直接报错并终止脚本，节省时间。
+
+
+
